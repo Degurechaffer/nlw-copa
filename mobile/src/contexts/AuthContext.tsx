@@ -2,6 +2,8 @@ import { createContext, ReactNode, useState, useEffect } from "react";
 import * as Google from 'expo-auth-session/providers/google'
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrower from 'expo-web-browser'
+import {api} from '../services/api'
+
 
 WebBrower.maybeCompleteAuthSession();
 
@@ -46,8 +48,20 @@ export function AuthContextProvider({children}: AuthProviderProps){
         }
     }
 
-    async function signInWithGoggle(access_Token: string) {
-        console.log("TOKEN DE AUTENTICAÇÃO ===>", access_Token)
+    async function signInWithGoggle(access_token: string) {
+        try {
+            setIsUserLoading(true);
+            const tokenResponse = await api.post('/users', {access_token});
+            api.defaults.headers.common['Authorization'] = `Bearer ${tokenResponse.data.token}`;
+            const userInfoResponse = await api.get('/me');
+            setUser(userInfoResponse.data.user);
+
+        } catch (error) {
+            console.log(error);
+            throw error;
+        } finally{
+            setIsUserLoading(false);
+        }
     }
 
     useEffect(() =>{
